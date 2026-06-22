@@ -1,6 +1,6 @@
 {
   "name": "pi-rtk-bash",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "description": "RTK-backed rtk_bash tool for Pi one-shot shell commands.",
   "main": "./src/index.ts",
