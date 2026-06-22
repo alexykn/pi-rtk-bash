@@ -3,6 +3,7 @@ import { RTK_BASH_TOOL_NAME } from "../pi-tools/bash.js";
 import { runRtk } from "../rtk/binary.js";
 import type { RtkBashStats } from "../rtk/stats.js";
 import { toErrorMessage } from "../shared/errors.js";
+import { saveSettings } from "./settings.js";
 
 export type CommandServices = {
   stats: RtkBashStats;
@@ -21,6 +22,7 @@ export function registerCommands(pi: ExtensionAPI, services: CommandServices) {
       if (action === "enable") {
         const active = pi.getActiveTools();
         pi.setActiveTools([...new Set([...active, RTK_BASH_TOOL_NAME])]);
+        saveSettings(pi);
         ctx.ui.notify("pi-rtk-bash: rtk_bash is active. built-in bash, exec_command, and write_stdin were left unchanged.", "info");
         return;
       }
@@ -91,6 +93,7 @@ function toggleTools(pi: ExtensionAPI, toolNames: string[]) {
   }
 
   pi.setActiveTools([...active]);
+  saveSettings(pi);
 }
 
 async function buildStatus(pi: ExtensionAPI, stats: RtkBashStats): Promise<string> {
