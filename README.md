@@ -50,6 +50,9 @@ Use `exec_command` only for:
 
 ## Requirements
 
+Requires Node.js 22.19 or newer. RTK is an external executable and is not bundled
+or upgraded by this extension. Compatibility is tested against RTK 0.50.0.
+
 Install RTK first and make sure it is on `PATH`:
 
 ```sh
@@ -135,6 +138,41 @@ The initial recoverable fallback list is intentionally narrow:
 This handles cases where RTK rewrites a valid native `find` invocation into `rtk find`, but `rtk find` later rejects predicates/actions that native `find` supports.
 
 Other command failures are returned normally.
+
+RTK 0.50.0 handles additional native `find` syntax itself, so some commands no
+longer need this fallback. The narrow error matcher remains for older RTK
+versions. Rewrite output is accepted with exit code 0 or 3: the latter means
+RTK's Claude hook would request confirmation, and still provides a valid
+rewrite. Pi controls tool execution permissions in this integration.
+
+## Code preview shell
+
+`rtk_bash` uses the public `withCodePreviewShell` API from `pi-code-previews`,
+which is installed automatically as a runtime dependency. This adds its tool
+frame and timing presentation while retaining Pi's bash command/result renderers
+and the existing RTK execution, fallback, and metadata behavior.
+
+Global settings are loaded before tool registration from
+`$PI_CODING_AGENT_DIR/code-previews.json` (default: `~/.pi/agent/code-previews.json`).
+For example, set `CODE_PREVIEW_TOOL_CALL_BACKGROUND=border` before starting Pi
+to use a border frame. Run `/reload` after changing the shell mode.
+
+This integration loads global preview settings only. It does not load project
+`.pi/settings.json` preview overrides. Install `pi-code-previews` separately as a
+Pi extension if you also want its settings commands and built-in tool previews.
+
+## Development
+
+```sh
+npm ci
+npm run check
+npm run test:rtk
+npm pack --dry-run
+```
+
+`npm run check` runs the typecheck and regression tests. `npm run test:rtk`
+requires `rtk` on `PATH` and runs live rewrite/execution compatibility tests.
+CI runs both on Node.js 22.19 and 24 with RTK 0.50.0.
 
 ## Adaptive prompt guidance
 
