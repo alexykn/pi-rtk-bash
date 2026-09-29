@@ -3,6 +3,7 @@ import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { test } from "node:test";
+import { initTheme } from "@earendil-works/pi-coding-agent";
 import { loadCodePreviewSettings, withCodePreviewShell } from "pi-code-previews";
 import { createRtkBashToolDefinition } from "../src/pi-tools/bash.ts";
 import { registerRtkBashTool } from "../src/pi-tools/registry.ts";
@@ -16,6 +17,7 @@ function createServices() {
 }
 
 test("preview decoration retains the executable tool contract", async () => {
+  initTheme("dark");
   const services = createServices();
   const original = createRtkBashToolDefinition(services);
   const decorated = withCodePreviewShell(original, { mode: "border" });
