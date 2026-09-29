@@ -76,6 +76,29 @@ test("registration decorates only rtk_bash", () => {
   assert.equal(typeof tools[0].renderResult, "function");
 });
 
+test("decorated execution preserves the older RTK find fallback and metadata", async () => {
+  const services = createServices();
+  services.rewrite.rewrite = async (command) => ({
+    kind: "rewritten",
+    command: "printf 'rtk find does not support compound predicates or actions. Use find directly\\n'; exit 1",
+    originalCommand: command,
+    source: "rtk",
+    fallbackAllowed: true,
+  });
+  const tool = withCodePreviewShell(createRtkBashToolDefinition(services));
+  const command = "printf 'native fallback\\n'";
+  const result = await tool.execute("fallback-test", { command, metadata: true },
+    undefined, undefined, {
+      cwd: process.cwd(),
+      sessionManager: { getSessionId: () => "fallback-test", getSessionFile: () => undefined },
+    });
+  assert.match(result.content[0].text, /^native fallback\n/);
+  assert.doesNotMatch(result.content[0].text, /does not support/);
+  assert.equal(result.details.rtk_bash.executed_command, command);
+  assert.equal(result.details.rtk_bash.fallback.reason, "rtk-find-unsupported-predicate");
+  assert.equal(services.stats.fallbackByReason["rtk-find-unsupported-predicate"], 1);
+});
+
 test("extension loads global preview settings before registering the shell", async () => {
   const agentDir = await mkdtemp(path.join(tmpdir(), "rtk-preview-"));
   const previousAgentDir = process.env.PI_CODING_AGENT_DIR;

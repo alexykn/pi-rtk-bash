@@ -76,7 +76,12 @@ test("current RTK rewrite and decorated execution compatibility", async (t) => {
     });
 
     await t.test("real command errors remain visible", async () => {
-      await assert.rejects(() => execute("printf 'failure fixture\\n'; exit 7"), /failure fixture|7/);
+      const result = await execute("printf 'failure fixture\\n'; exit 7");
+      assert.equal(result.isError, true);
+      assert.equal(result.structuredContent.exit_code, 7);
+      assert.match(result.content[0].text, /failure fixture/);
+      assert.match(result.content[0].text, /Command exited with code 7/);
+      assert.equal(result.details.rtk_bash.fallback, undefined);
     });
   } finally {
     await rm(cwd, { recursive: true, force: true });
