@@ -19,7 +19,10 @@ test("current RTK rewrite and decorated execution compatibility", async (t) => {
   const rewrite = new RtkRewriteService(stats);
   const tool = withCodePreviewShell(createRtkBashToolDefinition({ stats, rewrite }));
   const execute = (command, extra = {}) => tool.execute(
-    "rtk-compat", { command, metadata: true, ...extra }, undefined, undefined, { cwd },
+    "rtk-compat", { command, metadata: true, ...extra }, undefined, undefined, {
+      cwd,
+      sessionManager: { getSessionId: () => "rtk-compat", getSessionFile: () => undefined },
+    },
   );
   try {
     await writeFile(path.join(cwd, "fixture.txt"), "compatibility fixture\n");
@@ -37,6 +40,11 @@ test("current RTK rewrite and decorated execution compatibility", async (t) => {
       const result = await execute("printf 'passthrough fixture\\n'");
       assert.match(result.content[0].text, /passthrough fixture/);
       assert.equal(result.details.rtk_bash.rewrite_kind, "passthrough");
+    });
+
+    await t.test("Pi session environment reaches the local bash backend", async () => {
+      const result = await execute('printf "%s\\n" "$PI_SESSION_ID"', { metadata: false });
+      assert.equal(result.content[0].text, "rtk-compat\n");
     });
 
     await t.test("supported commands execute through RTK with metadata", async () => {

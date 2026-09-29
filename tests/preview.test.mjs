@@ -30,11 +30,40 @@ test("preview decoration retains the executable tool contract", async () => {
 
   const result = await decorated.execute("preview-test", {
     command: "printf 'raw output\\n'", pure_execution: true, metadata: true,
-  }, undefined, undefined, { cwd: process.cwd() });
+  }, undefined, undefined, {
+    cwd: process.cwd(),
+    sessionManager: { getSessionId: () => "preview-test", getSessionFile: () => undefined },
+  });
   assert.match(result.content[0].text, /raw output/);
   assert.equal(result.details.rtk_bash.rewrite_kind, "pure_execution");
   assert.equal(services.stats.pureExecutions, 1);
   assert.equal(services.stats.rewrites, 0);
+
+  const theme = {
+    fg: (_color, value) => value,
+    bg: (_color, value) => value,
+    bold: (value) => value,
+  };
+  const context = {
+    args: { command: "printf 'raw output\\n'" },
+    toolCallId: "preview-test",
+    invalidate() {},
+    lastComponent: undefined,
+    state: {},
+    cwd: process.cwd(),
+    executionStarted: false,
+    argsComplete: true,
+    isPartial: false,
+    expanded: true,
+    showImages: false,
+    isError: false,
+  };
+  const call = decorated.renderCall(context.args, theme, context);
+  assert.match(call.render(100).join("\n"), /printf/);
+  decorated.renderResult(result, { expanded: true, isPartial: false }, theme, {
+    ...context, executionStarted: true,
+  });
+  assert.match(call.render(100).join("\n"), /raw output/);
 });
 
 test("registration decorates only rtk_bash", () => {
