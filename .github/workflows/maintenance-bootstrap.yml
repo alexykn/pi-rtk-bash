@@ -1,0 +1,29 @@
+name: Maintenance bootstrap
+
+on:
+  push:
+    branches: [feat/code-previews-maintenance]
+
+permissions:
+  contents: read
+
+jobs:
+  dependencies:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Refresh development dependencies
+        run: npm install --save-dev @earendil-works/pi-ai@latest @earendil-works/pi-coding-agent@latest @earendil-works/pi-tui@latest @types/node@latest typebox@latest typescript@latest
+      - name: Check the migration baseline
+        run: npm run check
+      - name: Preserve generated dependency manifests
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-manifests
+          path: |
+            package.json
+            package-lock.json
